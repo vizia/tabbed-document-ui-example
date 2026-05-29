@@ -1,0 +1,54 @@
+:root {
+  font-family: "Avenir Next", "Segoe UI", sans-serif;
+}
+
+.toolbar {
+  background-color: var(--sidebar);
+}
+
+.content-host {
+  background-color: var(--background);
+}
+
+.status-bar {
+  background-color: #4b88de;
+}
+
+.status-text {
+  color: #e5e7eb;
+}
+
+.home-title {
+  font-size: 26px;
+  font-weight: bold;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.doc-text {
+  font-family: "SF Mono", "Menlo", monospace;
+}
+
+.info-sidebar {
+  border-width: 1px;
+  border-color: #d5dbe5;
+  background-color: #f9fbfd;
+  padding: 12px;
+}
+
+.empty-state {
+  color: #64748b;
+}
+
+.dir-value {
+  width: 1s;
+}
+
+.tab-title {
+  alignment: left;
+  cursor: context-menu;
+}
+
