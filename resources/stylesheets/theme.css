@@ -43,5 +43,8 @@
   color: #64748b;
 }
 
+hstack, vstack {
+  size: 1s;
+}
 
 
