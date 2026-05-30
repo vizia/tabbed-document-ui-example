@@ -44,7 +44,6 @@ pub fn build_new_tab(cx: &mut Context, app: UiModel, tab_id: TabId) {
             Label::new(cx, Localized::new("type")).width(Pixels(120.0));
             Select::new(cx, app.new_type_options, type_index_signal, true)
                 .placeholder(Localized::new("type_select"))
-                .min_selected(1)
                 .on_select(move |cx, index| {
                     let kind = if index == 1 {
                         DocumentKind::Image
