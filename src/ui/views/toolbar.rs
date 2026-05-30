@@ -22,6 +22,7 @@ pub fn toolbar(cx: &mut Context, app: UiModel) {
         HStack::new(cx, move |cx| {
             Label::new(cx, Localized::new("language"));
             Select::new(cx, app.language_options, app.selected_language, true)
+                .min_selected(1)
                 .on_select(|cx, index| {
                     let language = if index == 1 {
                         AppLanguage::Spanish
