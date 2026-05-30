@@ -1,6 +1,8 @@
 use crate::ui::model::persistence::persist_model_state;
 use crate::ui::model::session_init::restore_session_state;
-use crate::ui::model::{AppSettings, Document, DocumentId, NewTabDraft, TabId, TabState};
+use crate::ui::model::{
+    AppSettings, Document, DocumentId, DocumentUiState, NewTabDraft, TabId, TabState,
+};
 use std::collections::HashMap;
 use vizia::prelude::*;
 
@@ -15,6 +17,7 @@ pub struct UiModel {
     pub tabs: Signal<Vec<TabState>>,
     pub active_tab_id: Signal<Option<TabId>>,
     pub documents: Signal<Vec<Document>>,
+    pub document_ui_states: Signal<HashMap<DocumentId, DocumentUiState>>,
     pub detached_windows: Signal<Vec<DetachedWindowState>>,
     pub new_tab_drafts: Signal<HashMap<TabId, NewTabDraft>>,
     pub settings: Signal<AppSettings>,
@@ -36,6 +39,7 @@ impl UiModel {
             tabs: Signal::new(session.tabs),
             active_tab_id: Signal::new(session.active_tab_id),
             documents: Signal::new(session.documents),
+            document_ui_states: Signal::new(session.document_ui_states),
             detached_windows: Signal::new(Vec::new()),
             new_tab_drafts: Signal::new(HashMap::new()),
             settings: Signal::new(session.settings),

@@ -1,4 +1,5 @@
 pub mod document;
+pub mod document_ui_state;
 mod document_workflow;
 mod draft_actions;
 pub mod ids;
@@ -16,6 +17,7 @@ mod tab_title;
 mod tests;
 
 pub use document::{Document, DocumentKind, ImageState};
+pub use document_ui_state::{DocumentUiState, MIN_DOCUMENT_SIDEBAR_WIDTH};
 pub use ids::{DocumentId, TabId};
 pub use language::AppLanguage;
 pub use model_data::{DetachedWindowState, UiModel};

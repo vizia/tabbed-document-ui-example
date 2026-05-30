@@ -10,7 +10,15 @@ pub fn build_image_document_page(
     path_display: String,
     image_state: Option<ImageState>,
 ) {
-    let sidebar_width = Signal::new(Pixels(300.0));
+    let sidebar_width = app
+        .document_ui_states
+        .map(move |_| Pixels(app.document_ui_state_for(doc_id).sidebar_width));
+    let scroll_x = app
+        .document_ui_states
+        .map(move |_| app.document_ui_state_for(doc_id).scroll_x);
+    let scroll_y = app
+        .document_ui_states
+        .map(move |_| app.document_ui_state_for(doc_id).scroll_y);
     let image_path = path_display.clone();
 
     HStack::new(cx, move |cx| {
@@ -29,6 +37,11 @@ pub fn build_image_document_page(
                 .class("doc-image")
                 .alignment(Alignment::TopLeft);
         })
+            .scroll_x(scroll_x)
+            .scroll_y(scroll_y)
+            .on_scroll(move |cx, x, y| {
+                cx.emit(DocumentEvent::UpdateScrollPosition(doc_id, x, y));
+            })
         .class("document-scroll")
         .width(Stretch(1.0))
         .height(Stretch(1.0));
@@ -37,7 +50,9 @@ pub fn build_image_document_page(
             cx,
             sidebar_width,
             ResizeStackDirection::Left,
-            move |_cx, new_size| sidebar_width.set(Pixels(new_size)),
+            move |cx, new_size| {
+                cx.emit(DocumentEvent::UpdateSidebarWidth(doc_id, new_size));
+            },
             move |cx| {
                 build_image_info_sidebar(
                     cx,

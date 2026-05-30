@@ -2,7 +2,10 @@ use super::UiModel;
 use super::tab_title::{refresh_document_tab_titles_for, title_for_path};
 use crate::ui::commands::documents;
 use crate::ui::events::OpenMode;
-use crate::ui::model::{Document, DocumentId, DocumentKind, DocumentState, TabKind, TabState};
+use crate::ui::model::{
+    Document, DocumentId, DocumentKind, DocumentState, DocumentUiState,
+    MIN_DOCUMENT_SIDEBAR_WIDTH, TabKind, TabState,
+};
 use std::path::PathBuf;
 use vizia::prelude::*;
 
@@ -63,8 +66,15 @@ impl UiModel {
         }
 
         let mut docs = self.documents.get_untracked();
+        let opened_id = document.id;
         docs.push(document);
         self.documents.set(docs);
+
+        let mut ui_states = self.document_ui_states.get_untracked();
+        ui_states
+            .entry(opened_id)
+            .or_insert_with(DocumentUiState::default);
+        self.document_ui_states.set(ui_states);
 
         let docs = self.documents.get_untracked();
         refresh_document_tab_titles_for(&mut tabs, &docs);
@@ -114,5 +124,28 @@ impl UiModel {
         if let Some(path) = save_path {
             documents::save_text_document(cx, path, content);
         }
+    }
+
+    pub fn set_sidebar_width(&self, id: DocumentId, width: f32) {
+        let mut ui_states = self.document_ui_states.get_untracked();
+        let ui_state = ui_states.entry(id).or_insert_with(DocumentUiState::default);
+        ui_state.sidebar_width = width.max(MIN_DOCUMENT_SIDEBAR_WIDTH);
+        self.document_ui_states.set(ui_states);
+    }
+
+    pub fn set_scroll_position(&self, id: DocumentId, scroll_x: f32, scroll_y: f32) {
+        let mut ui_states = self.document_ui_states.get_untracked();
+        let ui_state = ui_states.entry(id).or_insert_with(DocumentUiState::default);
+        ui_state.scroll_x = scroll_x.max(0.0);
+        ui_state.scroll_y = scroll_y.max(0.0);
+        self.document_ui_states.set(ui_states);
+    }
+
+    pub fn document_ui_state_for(&self, id: DocumentId) -> DocumentUiState {
+        self.document_ui_states
+            .get_untracked()
+            .get(&id)
+            .copied()
+            .unwrap_or_default()
     }
 }

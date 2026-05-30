@@ -78,6 +78,9 @@ impl UiModel {
                     || self.has_detached_window_for_document(document.id);
                 if !doc_still_open {
                     docs.retain(|doc| doc.id != document.id);
+                    let mut ui_states = self.document_ui_states.get_untracked();
+                    ui_states.remove(&document.id);
+                    self.document_ui_states.set(ui_states);
                 }
                 self.documents.set(docs);
             }
@@ -108,6 +111,10 @@ impl UiModel {
                 .iter()
                 .any(|window| window.document_id == doc.id)
         });
+        let retained_ids = docs.iter().map(|doc| doc.id).collect::<Vec<_>>();
+        let mut ui_states = self.document_ui_states.get_untracked();
+        ui_states.retain(|id, _| retained_ids.contains(id));
+        self.document_ui_states.set(ui_states);
         self.documents.set(docs);
         self.new_tab_drafts.set(HashMap::new());
         self.active_tab_id.set(None);
@@ -181,6 +188,10 @@ impl UiModel {
             tabs_reference_document(&remaining_tabs, doc.id)
                 || self.has_detached_window_for_document(doc.id)
         });
+        let retained_ids = docs.iter().map(|doc| doc.id).collect::<Vec<_>>();
+        let mut ui_states = self.document_ui_states.get_untracked();
+        ui_states.retain(|id, _| retained_ids.contains(id));
+        self.document_ui_states.set(ui_states);
         self.documents.set(docs);
 
         let current_docs = self.documents.get_untracked();
@@ -243,6 +254,9 @@ impl UiModel {
 
         let mut docs = self.documents.get_untracked();
         docs.retain(|doc| doc.id != document_id);
+        let mut ui_states = self.document_ui_states.get_untracked();
+        ui_states.remove(&document_id);
+        self.document_ui_states.set(ui_states);
         self.documents.set(docs);
     }
 

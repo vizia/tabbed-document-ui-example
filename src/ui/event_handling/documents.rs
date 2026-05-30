@@ -11,6 +11,12 @@ impl UiModel {
             DocumentEvent::RecordImageClick(doc_id, x, y) => {
                 self.set_image_last_click(cx, *doc_id, *x, *y)
             }
+            DocumentEvent::UpdateSidebarWidth(doc_id, width) => {
+                self.set_sidebar_width(*doc_id, *width)
+            }
+            DocumentEvent::UpdateScrollPosition(doc_id, scroll_x, scroll_y) => {
+                self.set_scroll_position(*doc_id, *scroll_x, *scroll_y)
+            }
         });
     }
 }

@@ -30,4 +30,6 @@ pub enum DraftEvent {
 pub enum DocumentEvent {
     UpdateTextBuffer(DocumentId, String),
     RecordImageClick(DocumentId, f32, f32),
+    UpdateSidebarWidth(DocumentId, f32),
+    UpdateScrollPosition(DocumentId, f32, f32),
 }

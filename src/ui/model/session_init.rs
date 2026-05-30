@@ -1,14 +1,17 @@
 use super::tab_title::{refresh_document_tab_titles_for, title_for_path};
 use crate::storage;
 use crate::ui::model::{
-    AppLanguage, AppSettings, Document, DocumentState, TabId, TabKind, TabState,
+    AppLanguage, AppSettings, Document, DocumentId, DocumentState, DocumentUiState, TabId,
+    TabKind, TabState,
 };
+use std::collections::HashMap;
 use crate::worker;
 
 pub(crate) struct RestoredSession {
     pub tabs: Vec<TabState>,
     pub active_tab_id: Option<TabId>,
     pub documents: Vec<Document>,
+    pub document_ui_states: HashMap<DocumentId, DocumentUiState>,
     pub settings: AppSettings,
     pub selected_language: Option<usize>,
     pub next_tab_id: u64,
@@ -23,6 +26,7 @@ pub(crate) fn restore_session_state() -> RestoredSession {
 
     let mut tabs = Vec::new();
     let mut documents = Vec::new();
+    let mut document_ui_states = HashMap::new();
     let mut next_tab_id = 1_u64;
     let mut next_document_id = 1_u64;
 
@@ -38,6 +42,7 @@ pub(crate) fn restore_session_state() -> RestoredSession {
 
     for file in &persisted.open_files {
         if let Ok(doc) = worker::load_document_from_path_blocking(file, next_document_id) {
+            document_ui_states.insert(doc.id, DocumentUiState::default());
             documents.push(doc.clone());
             tabs.push(TabState {
                 id: next_tab_id,
@@ -65,6 +70,7 @@ pub(crate) fn restore_session_state() -> RestoredSession {
         tabs,
         active_tab_id,
         documents,
+        document_ui_states,
         settings: persisted.settings,
         selected_language,
         next_tab_id,
