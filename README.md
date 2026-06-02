@@ -1,5 +1,7 @@
 # Tabbed document UI example
 
+An example of a tabbed document UI, with a toolbar, tab bar, and content area.  The application supports opening text and image files, and creating new files. Requirements provided by https://github.com/hydra from an egui implementation https://github.com/hydra/egui-tabbed-document-ui-example.
+
 ## Requirements
 
 - Main window
