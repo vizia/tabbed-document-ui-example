@@ -25,61 +25,64 @@ pub fn build_new_tab(cx: &mut Context, app: UiModel, tab_id: TabId) {
             .unwrap_or_else(|| "-".to_string())
     });
 
-    VStack::new(cx, move |cx| {
-        Label::new(cx, Localized::new("new_document")).class("section-title");
+    ScrollView::new(cx, move |cx| {
+        VStack::new(cx, move |cx| {
+            Label::new(cx, Localized::new("new_document")).class("section-title");
 
-        HStack::new(cx, |cx| {
-            Label::new(cx, Localized::new("name")).width(Pixels(120.0));
-            Textbox::new(cx, name_signal)
-                .width(Stretch(1.0))
-                .placeholder(Localized::new("name_placeholder"))
-                .on_edit(move |cx, value| cx.emit(DraftEvent::RenameDraft(tab_id, value)));
-        })
-        .gap(Pixels(10.0))
-        .height(Auto)
-        .alignment(Alignment::Left)
-        .width(Stretch(1.0));
+            HStack::new(cx, |cx| {
+                Label::new(cx, Localized::new("name")).width(Pixels(120.0));
+                Textbox::new(cx, name_signal)
+                    .width(Stretch(1.0))
+                    .placeholder(Localized::new("name_placeholder"))
+                    .on_edit(move |cx, value| cx.emit(DraftEvent::RenameDraft(tab_id, value)));
+            })
+            .gap(Pixels(10.0))
+            .height(Auto)
+            .alignment(Alignment::Left)
+            .width(Stretch(1.0));
 
-        HStack::new(cx, |cx| {
-            Label::new(cx, Localized::new("type")).width(Pixels(120.0));
-            Select::new(cx, app.new_type_options, type_index_signal, true)
-                .placeholder(Localized::new("type_select"))
-                .on_select(move |cx, index| {
-                    let kind = if index == 1 {
-                        DocumentKind::Image
-                    } else {
-                        DocumentKind::Text
-                    };
-                    cx.emit(DraftEvent::ChooseDraftType(tab_id, Some(kind)));
-                })
-                .width(Stretch(1.0));
+            HStack::new(cx, |cx| {
+                Label::new(cx, Localized::new("type")).width(Pixels(120.0));
+                Select::new(cx, app.new_type_options, type_index_signal, true)
+                    .placeholder(Localized::new("type_select"))
+                    .on_select(move |cx, index| {
+                        let kind = if index == 1 {
+                            DocumentKind::Image
+                        } else {
+                            DocumentKind::Text
+                        };
+                        cx.emit(DraftEvent::ChooseDraftType(tab_id, Some(kind)));
+                    })
+                    .width(Stretch(1.0));
+            })
+            .height(Auto)
+            .alignment(Alignment::Left)
+            .width(Stretch(1.0))
+            .gap(Pixels(10.0));
+
+            HStack::new(cx, |cx| {
+                Label::new(cx, Localized::new("directory")).width(Pixels(120.0));
+                Binding::new(cx, directory_signal, move |cx| {
+                    let label = directory_signal.get();
+                    Label::new(cx, label).width(Stretch(1.0));
+                });
+                Button::new(cx, |cx| Label::new(cx, Localized::new("browse")))
+                    .on_press(move |cx| cx.emit(DraftEvent::ChooseDraftDirectory(tab_id)));
+            })
+            .height(Auto)
+            .alignment(Alignment::Left)
+            .width(Stretch(1.0))
+            .gap(Pixels(10.0));
+
+            Button::new(cx, |cx| Label::new(cx, Localized::new("ok")))
+                .variant(ButtonVariant::Primary)
+                .on_press(move |cx| cx.emit(DraftEvent::SubmitDraft(tab_id)))
+                .width(Pixels(120.0));
         })
+        .gap(Pixels(12.0))
+        .padding(Pixels(12.0))
         .height(Auto)
-        .alignment(Alignment::Left)
         .width(Stretch(1.0))
-        .gap(Pixels(10.0));
-
-        HStack::new(cx, |cx| {
-            Label::new(cx, Localized::new("directory")).width(Pixels(120.0));
-            Binding::new(cx, directory_signal, move |cx| {
-                let label = directory_signal.get();
-                Label::new(cx, label).width(Stretch(1.0));
-            });
-            Button::new(cx, |cx| Label::new(cx, Localized::new("browse")))
-                .on_press(move |cx| cx.emit(DraftEvent::ChooseDraftDirectory(tab_id)));
-        })
-        .height(Auto)
-        .alignment(Alignment::Left)
-        .width(Stretch(1.0))
-        .gap(Pixels(10.0));
-
-        Button::new(cx, |cx| Label::new(cx, Localized::new("ok")))
-            .variant(ButtonVariant::Primary)
-            .on_press(move |cx| cx.emit(DraftEvent::SubmitDraft(tab_id)))
-            .width(Pixels(120.0));
-    })
-    .gap(Pixels(12.0))
-    .padding(Pixels(12.0))
-    .width(Stretch(1.0))
-    .max_width(Pixels(800.0));
+        .max_width(Pixels(800.0));
+    });
 }
