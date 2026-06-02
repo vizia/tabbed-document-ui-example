@@ -37,11 +37,11 @@ pub fn build_image_document_page(
                 .class("doc-image")
                 .alignment(Alignment::TopLeft);
         })
-            .scroll_x(scroll_x)
-            .scroll_y(scroll_y)
-            .on_scroll(move |cx, x, y| {
-                cx.emit(DocumentEvent::UpdateScrollPosition(doc_id, x, y));
-            })
+        .scroll_x(scroll_x)
+        .scroll_y(scroll_y)
+        .on_scroll(move |cx, x, y| {
+            cx.emit(DocumentEvent::UpdateScrollPosition(doc_id, x, y));
+        })
         .class("document-scroll")
         .width(Stretch(1.0))
         .height(Stretch(1.0));

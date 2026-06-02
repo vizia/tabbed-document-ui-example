@@ -21,7 +21,13 @@ pub fn content_host(cx: &mut Context, app: UiModel) {
         VStack::new(cx, |cx| {
             build_no_tabs_open_state(cx);
         })
-        .display(has_tabs.map(|has_tabs| if *has_tabs { Display::None } else { Display::Flex }))
+        .display(has_tabs.map(|has_tabs| {
+            if *has_tabs {
+                Display::None
+            } else {
+                Display::Flex
+            }
+        }))
         .size(Stretch(1.0));
 
         TabView::new(cx, app.tabs, move |_cx, _index, tab| {
@@ -83,14 +89,12 @@ pub fn content_host(cx: &mut Context, app: UiModel) {
                             |cx| Label::new(cx, "Close Other Tabs"),
                         );
 
-                        if matches!(tab_kind_for_menu, TabKind::Document(_) | TabKind::New(_)) {
-                            Divider::new(cx);
-                            MenuButton::new(
-                                cx,
-                                move |cx| cx.emit(TabContextEvent::DisplayInWindow(tab_id)),
-                                |cx| Label::new(cx, "Open In Separate Window"),
-                            );
-                        }
+                        Divider::new(cx);
+                        MenuButton::new(
+                            cx,
+                            move |cx| cx.emit(TabContextEvent::DisplayInWindow(tab_id)),
+                            |cx| Label::new(cx, "Open In Separate Window"),
+                        );
                     })
                 }
             })
@@ -113,7 +117,13 @@ pub fn content_host(cx: &mut Context, app: UiModel) {
                 }
             }
         })
-        .display(has_tabs.map(|has_tabs| if *has_tabs { Display::Flex } else { Display::None }))
+        .display(has_tabs.map(|has_tabs| {
+            if *has_tabs {
+                Display::Flex
+            } else {
+                Display::None
+            }
+        }))
         .size(Stretch(1.0));
     })
     .class("content-host")

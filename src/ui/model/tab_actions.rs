@@ -9,7 +9,35 @@ impl UiModel {
         self.detached_windows
             .get_untracked()
             .into_iter()
-            .any(|window| window.document_id == document_id)
+            .any(|window| {
+                matches!(
+                    window.tab.kind,
+                    TabKind::Document(document) if document.id == document_id
+                )
+            })
+    }
+
+    fn cleanup_removed_tab(&self, tab: &TabState, remaining_tabs: &[TabState]) {
+        match &tab.kind {
+            TabKind::Document(document) => {
+                let mut docs = self.documents.get_untracked();
+                let doc_still_open = tabs_reference_document(remaining_tabs, document.id)
+                    || self.has_detached_window_for_document(document.id);
+                if !doc_still_open {
+                    docs.retain(|doc| doc.id != document.id);
+                    let mut ui_states = self.document_ui_states.get_untracked();
+                    ui_states.remove(&document.id);
+                    self.document_ui_states.set(ui_states);
+                }
+                self.documents.set(docs);
+            }
+            TabKind::New(_) => {
+                let mut drafts = self.new_tab_drafts.get_untracked();
+                drafts.remove(&tab.id);
+                self.new_tab_drafts.set(drafts);
+            }
+            TabKind::Home => {}
+        }
     }
 
     pub fn add_new_tab(&self) {
@@ -45,14 +73,12 @@ impl UiModel {
         self.next_tab_id.set(tab_id + 1);
 
         let mut tabs = tabs;
-        tabs.push(
-            TabState {
-                id: tab_id,
-                title: "Home".to_string(),
-                kind: TabKind::Home,
-                closable: true,
-            },
-        );
+        tabs.push(TabState {
+            id: tab_id,
+            title: "Home".to_string(),
+            kind: TabKind::Home,
+            closable: true,
+        });
         self.tabs.set(tabs);
         self.active_tab_id.set(Some(tab_id));
         self.record_tab_visit(tab_id);
@@ -71,18 +97,7 @@ impl UiModel {
             .map(|idx| tabs.remove(idx));
 
         if let Some(tab) = removed {
-            if let TabKind::Document(document) = tab.kind {
-                let mut docs = self.documents.get_untracked();
-                let doc_still_open = tabs_reference_document(&tabs, document.id)
-                    || self.has_detached_window_for_document(document.id);
-                if !doc_still_open {
-                    docs.retain(|doc| doc.id != document.id);
-                    let mut ui_states = self.document_ui_states.get_untracked();
-                    ui_states.remove(&document.id);
-                    self.document_ui_states.set(ui_states);
-                }
-                self.documents.set(docs);
-            }
+            self.cleanup_removed_tab(&tab, &tabs);
 
             let docs = self.documents.get_untracked();
             refresh_document_tab_titles_for(&mut tabs, &docs);
@@ -91,11 +106,6 @@ impl UiModel {
             let mut mru = self.mru_tab_ids.get_untracked();
             mru.retain(|id| *id != tab_id);
             self.mru_tab_ids.set(mru);
-
-            let mut drafts = self.new_tab_drafts.get_untracked();
-            drafts.remove(&tab_id);
-            self.new_tab_drafts.set(drafts);
-
             self.active_tab_id.set(self.next_mru_tab());
             self.persist_state();
         }
@@ -106,9 +116,12 @@ impl UiModel {
         let detached_windows = self.detached_windows.get_untracked();
         let mut docs = self.documents.get_untracked();
         docs.retain(|doc| {
-            detached_windows
-                .iter()
-                .any(|window| window.document_id == doc.id)
+            detached_windows.iter().any(|window| {
+                matches!(
+                    &window.tab.kind,
+                    TabKind::Document(document) if document.id == doc.id
+                )
+            })
         });
         let retained_ids = docs.iter().map(|doc| doc.id).collect::<Vec<_>>();
         let mut ui_states = self.document_ui_states.get_untracked();
@@ -207,19 +220,22 @@ impl UiModel {
     }
 
     pub fn display_document_in_window(&self, tab_id: TabId) {
-        let Some(document_id) = self.tabs.get_untracked().into_iter().find_map(|tab| {
-            if tab.id == tab_id {
-                if let TabKind::Document(document) = tab.kind {
-                    Some(document.id)
-                } else {
-                    None
-                }
-            } else {
-                None
-            }
-        }) else {
+        let mut tabs = self.tabs.get_untracked();
+        let Some(index) = tabs.iter().position(|tab| tab.id == tab_id) else {
             return;
         };
+
+        let detached_tab = tabs.remove(index);
+        self.tabs.set(tabs.clone());
+        self.cleanup_removed_tab(&detached_tab, &tabs);
+
+        let mut mru = self.mru_tab_ids.get_untracked();
+        mru.retain(|id| *id != tab_id);
+        self.mru_tab_ids.set(mru);
+
+        if self.active_tab_id.get_untracked() == Some(tab_id) {
+            self.active_tab_id.set(self.next_mru_tab());
+        }
 
         let window_id = self.next_detached_window_id.get_untracked();
         self.next_detached_window_id.set(window_id + 1);
@@ -227,36 +243,27 @@ impl UiModel {
         let mut detached_windows = self.detached_windows.get_untracked();
         detached_windows.push(crate::ui::model::DetachedWindowState {
             id: window_id,
-            document_id,
+            tab: detached_tab,
         });
         self.detached_windows.set(detached_windows);
+        self.persist_state();
     }
 
-    pub fn clear_detached_document_window(&self, window_id: u64) {
+    pub fn clear_detached_window(&self, window_id: u64) {
         let mut detached_windows = self.detached_windows.get_untracked();
-        let Some(document_id) = detached_windows
+        let Some(tab) = detached_windows
             .iter()
             .find(|window| window.id == window_id)
-            .map(|window| window.document_id)
+            .map(|window| window.tab.clone())
         else {
             return;
         };
 
         detached_windows.retain(|window| window.id != window_id);
         self.detached_windows.set(detached_windows);
-
-        if tabs_reference_document(&self.tabs.get_untracked(), document_id)
-            || self.has_detached_window_for_document(document_id)
-        {
-            return;
-        }
-
-        let mut docs = self.documents.get_untracked();
-        docs.retain(|doc| doc.id != document_id);
-        let mut ui_states = self.document_ui_states.get_untracked();
-        ui_states.remove(&document_id);
-        self.document_ui_states.set(ui_states);
-        self.documents.set(docs);
+        let tabs = self.tabs.get_untracked();
+        self.cleanup_removed_tab(&tab, &tabs);
+        self.persist_state();
     }
 
     fn next_mru_tab(&self) -> Option<TabId> {

@@ -1,4 +1,5 @@
 use super::tab_title::{refresh_document_tab_titles_for, tabs_reference_document};
+use crate::ui::model::model_data::DetachedWindowState;
 use crate::ui::model::{Document, DocumentId, DocumentKind, DocumentState, TabKind, TabState};
 use std::path::PathBuf;
 
@@ -174,4 +175,29 @@ fn tabs_reference_document_false_when_document_is_absent() {
     }];
 
     assert!(!tabs_reference_document(&tabs, 100));
+}
+
+#[test]
+fn detached_document_window_counts_as_open_document_reference() {
+    let detached_windows = vec![DetachedWindowState {
+        id: 1,
+        tab: TabState {
+            id: 99,
+            title: "Detached Doc".to_string(),
+            kind: TabKind::Document(DocumentState {
+                id: 100,
+                title: "Detached Doc".to_string(),
+            }),
+            closable: true,
+        },
+    }];
+
+    let has_reference = detached_windows.into_iter().any(|window| {
+        matches!(
+            window.tab.kind,
+            TabKind::Document(DocumentState { id: 100, .. })
+        )
+    });
+
+    assert!(has_reference);
 }

@@ -3,8 +3,8 @@ use super::tab_title::{refresh_document_tab_titles_for, title_for_path};
 use crate::ui::commands::documents;
 use crate::ui::events::OpenMode;
 use crate::ui::model::{
-    Document, DocumentId, DocumentKind, DocumentState, DocumentUiState,
-    MIN_DOCUMENT_SIDEBAR_WIDTH, TabKind, TabState,
+    Document, DocumentId, DocumentKind, DocumentState, DocumentUiState, MIN_DOCUMENT_SIDEBAR_WIDTH,
+    TabKind, TabState,
 };
 use std::path::PathBuf;
 use vizia::prelude::*;

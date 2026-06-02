@@ -6,10 +6,10 @@ use crate::ui::model::{
 use std::collections::HashMap;
 use vizia::prelude::*;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct DetachedWindowState {
     pub id: u64,
-    pub document_id: DocumentId,
+    pub tab: TabState,
 }
 
 #[derive(Clone, Copy)]

@@ -1,11 +1,11 @@
 use super::tab_title::{refresh_document_tab_titles_for, title_for_path};
 use crate::storage;
 use crate::ui::model::{
-    AppLanguage, AppSettings, Document, DocumentId, DocumentState, DocumentUiState, TabId,
-    TabKind, TabState,
+    AppLanguage, AppSettings, Document, DocumentId, DocumentState, DocumentUiState, TabId, TabKind,
+    TabState,
 };
-use std::collections::HashMap;
 use crate::worker;
+use std::collections::HashMap;
 
 pub(crate) struct RestoredSession {
     pub tabs: Vec<TabState>,
