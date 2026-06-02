@@ -9,20 +9,20 @@ use crate::ui::views::text_document_page::build_text_document_page;
 use vizia::prelude::*;
 
 pub fn content_host(cx: &mut Context, app: UiModel) {
-    Binding::new(cx, app.tabs, move |cx| {
-        let tabs = app.tabs.get();
+    let has_tabs = app.tabs.map(|tabs| !tabs.is_empty());
+    let selected_index = app.tabs.map(move |tabs| {
+        app.active_tab_id
+            .get()
+            .and_then(|id| tabs.iter().position(|tab| tab.id == id))
+            .unwrap_or(0)
+    });
 
-        if tabs.is_empty() {
+    VStack::new(cx, move |cx| {
+        VStack::new(cx, |cx| {
             build_no_tabs_open_state(cx);
-            return;
-        }
-
-        let selected_index = app.tabs.map(move |tabs| {
-            app.active_tab_id
-                .get()
-                .and_then(|id| tabs.iter().position(|tab| tab.id == id))
-                .unwrap_or(0)
-        });
+        })
+        .display(has_tabs.map(|has_tabs| if *has_tabs { Display::None } else { Display::Flex }))
+        .size(Stretch(1.0));
 
         TabView::new(cx, app.tabs, move |_cx, _index, tab| {
             let tab_id = tab.id;
@@ -113,7 +113,9 @@ pub fn content_host(cx: &mut Context, app: UiModel) {
                 }
             }
         })
-        .class("content-host")
+        .display(has_tabs.map(|has_tabs| if *has_tabs { Display::Flex } else { Display::None }))
         .size(Stretch(1.0));
-    });
+    })
+    .class("content-host")
+    .size(Stretch(1.0));
 }
