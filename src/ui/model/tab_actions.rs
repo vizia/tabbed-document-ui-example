@@ -45,8 +45,7 @@ impl UiModel {
         self.next_tab_id.set(tab_id + 1);
 
         let mut tabs = tabs;
-        tabs.insert(
-            0,
+        tabs.push(
             TabState {
                 id: tab_id,
                 title: "Home".to_string(),

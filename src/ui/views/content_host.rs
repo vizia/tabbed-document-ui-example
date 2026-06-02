@@ -11,16 +11,18 @@ use vizia::prelude::*;
 pub fn content_host(cx: &mut Context, app: UiModel) {
     Binding::new(cx, app.tabs, move |cx| {
         let tabs = app.tabs.get();
-        let active_tab_id = app.active_tab_id.get();
 
         if tabs.is_empty() {
             build_no_tabs_open_state(cx);
             return;
         }
 
-        let selected_index = active_tab_id
-            .and_then(|id| tabs.iter().position(|tab| tab.id == id))
-            .unwrap_or(0);
+        let selected_index = app.tabs.map(move |tabs| {
+            app.active_tab_id
+                .get()
+                .and_then(|id| tabs.iter().position(|tab| tab.id == id))
+                .unwrap_or(0)
+        });
 
         TabView::new(cx, app.tabs, move |_cx, _index, tab| {
             let tab_id = tab.id;
@@ -94,7 +96,7 @@ pub fn content_host(cx: &mut Context, app: UiModel) {
             })
             .closeable(closeable)
         })
-        .with_selected(Signal::new(selected_index))
+        .with_selected(selected_index)
         .on_select({
             move |cx, index| {
                 if let Some(tab) = app.tabs.get_untracked().get(index).cloned() {
